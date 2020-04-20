@@ -1,30 +1,8 @@
 const express = require('express');
 const { check, validationResult } = require('express-validator');
 const router = express.Router();
-
-module.exports = params => {
-  const { feedbackService } = params;
-
-  router.get('/', async (request, response, next) => {
-    // try {
-    //   const feedback = await feedbackService.getList();
-    //   return response.json(feedback);
-    // } catch(err){
-    //   return next(err);
-    // }
-    try {
-      const feedback = await feedbackService.getList();
-      const errors = request.session.feedback ? request.session.feedback.errors : false;
-      request.session.feedback = {};
-      return response.render('layout', { pageTitle: 'Feedback', template: 'feedback', feedback, errors });
-    } catch(err) {
-      return next(err);
-    }
-
-  });
-
-  router.post('/', [
-    check('name')
+const validations = [
+  check('name')
       .trim()
       .isLength({min: 3})
       .escape()
@@ -44,16 +22,67 @@ module.exports = params => {
       .isLength({min: 5})
       .escape()
       .withMessage('A message is required'),
-  ],(request, response) => {
-    const errors = validationResult(request);
+]
 
-    if(!errors.isEmpty()){
-        request.session.feedback = {
-          errors:errors.array()
-        };
-        return response.redirect('/feedback');
+module.exports = params => {
+  const { feedbackService } = params;
+
+  router.get('/', async (request, response, next) => {
+    // try {
+    //   const feedback = await feedbackService.getList();
+    //   return response.json(feedback);
+    // } catch(err){
+    //   return next(err);
+    // }
+    try {
+      const feedback = await feedbackService.getList();
+      const errors = request.session.feedback ? request.session.feedback.errors : false;
+      const successMessage = request.session.feedback ? request.session.feedback.message : false;
+
+      request.session.feedback = {};
+      return response.render('layout', { pageTitle: 'Feedback', template: 'feedback', feedback, errors, successMessage});
+    } catch(err) {
+      return next(err);
     }
-    return response.send('Feedback form post');
+
+  });
+
+  router.post('/', validations, async (request, response, next) => {
+    try {
+      const errors = validationResult(request);
+
+      if(!errors.isEmpty()){
+          request.session.feedback = {
+            errors:errors.array()
+          };
+          return response.redirect('/feedback');
+      }
+
+      const {name, email, title, message} = request.body;
+      await feedbackService.addEntry(name, email, title, message);
+      request.session.feedback = {
+        message: 'Thank you for your feedback!',
+      }
+      return response.redirect('/feedback');
+    } catch(err) {
+      return next(err);
+    }
+
+  });
+
+  router.post('/api', validations, async (request, response, next) => {
+    try {
+      const errors = validationResult(request);
+      if(!errors.isEmpty()) {
+        return response.json({errors: errors.array()});
+      }
+      const {name, email, title, message} = request.body;
+      await feedbackService.addEntry(name, email, title, message);
+      const feedback = await feedbackService.getList();
+      return response.json({feedback, successMessage: 'Thank you for your feedback'});
+    } catch(err){
+      return next(err);
+    }
   });
 
   return router;
