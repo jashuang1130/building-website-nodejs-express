@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <title>An Error Page</title>
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <link rel="stylesheet" href="/css/error.css">
+  </head>
+  <body>
+    <div class="error-404">
+        <div class="error-code m-b-10 m-t-20">
+          <%=status%>
+          <i class="fa fa-warning"></i></div>
+        <h2 class="font-bold"><%=message%></h2>
+
+        <div><br/>
+            <!-- <a class=" login-detail-panel-button btn" href="http://vultus.de/"> -->
+            <a href="/" class="btn btn-primary"><span class="glyphicon glyphicon-home"></span> Go back to Homepage</a>
+        </div>
+
+        <!-- <div class="error-desc">
+            Sorry, but the page you are looking for was either not found or does not exist. <br/>
+            Try refreshing the page or click the button below to go back to the Homepage.
+
+        </div> -->
+    </div>
+  </body>
+</html>
